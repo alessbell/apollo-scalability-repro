@@ -30,7 +30,6 @@ const ALL_PEOPLE = gql`
 `;
 
 function Title({ id }) {
-  // const people = usePeople();
   const { data } = useFragment({
     fragment: PersonFragment,
     from: {
@@ -42,7 +41,6 @@ function Title({ id }) {
 }
 
 function AddToCart({ id }) {
-  // const people = usePeople();
   const { data } = useFragment({
     fragment: PersonFragment,
     from: {
@@ -53,27 +51,43 @@ function AddToCart({ id }) {
   return <button>{data?.name}</button>;
 }
 
-function Hidden() {
+function Hidden({ id }) {
+  const { data } = useFragment({
+    fragment: PersonFragment,
+    from: {
+      __typename: "Person",
+      id,
+    },
+  });
   return null;
 }
 
 function ItemCard({ id }) {
+  const { data } = useFragment({
+    fragment: PersonFragment,
+    from: {
+      __typename: "Person",
+      id,
+    },
+  });
+
   return (
     <div>
       <Title id={id} />
       {Array.from({ length: 30 }).map(() => (
-        <Hidden />
+        <Hidden id={id} />
       ))}
       <AddToCart id={id} />
     </div>
   );
 }
 
-function Row({ people }) {
-  // const people = usePeople();
+function Row() {
+  const { data } = useQuery(ALL_PEOPLE);
+
   return (
     <div style={{ display: "flex" }}>
-      {people.map(({ id }) => (
+      {data?.people.map(({ id }) => (
         <>
           <ItemCard id={id} />
           <ItemCard id={id} />
@@ -87,13 +101,12 @@ function Row({ people }) {
 }
 
 function Grid({ people }) {
-  // const people = usePeople();
   if (!people) return <div>Loading...</div>;
   return people.map(({ id }) => (
     <>
-      <Row people={people} />
-      <Row people={people} />
-      <Row people={people} />
+      <Row />
+      <Row />
+      <Row />
     </>
   ));
 }
