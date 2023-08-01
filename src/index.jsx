@@ -7,111 +7,110 @@ import {
   InMemoryCache,
   gql,
   useQuery,
-  useMutation,
+  useFragment,
 } from "@apollo/client";
 
 import { link } from "./link.js";
 import "./index.css";
 
+const PersonFragment = gql`
+  fragment PersonFields on Person {
+    name
+  }
+`;
+
 const ALL_PEOPLE = gql`
   query AllPeople {
     people {
       id
-      name
+      ...PersonFields @nonreactive
     }
   }
+  ${PersonFragment}
 `;
 
-function Title() {
-  const people = usePeople();
-
-  return <h1>{people[0].name}</h1>;
+function Title({ id }) {
+  // const people = usePeople();
+  const { data } = useFragment({
+    fragment: PersonFragment,
+    from: {
+      __typename: "Person",
+      id,
+    },
+  });
+  return <h1>{data?.name}</h1>;
 }
 
-function AddToCart() {
-  const people = usePeople();
-
-  return <button>{people[0].name}</button>;
+function AddToCart({ id }) {
+  // const people = usePeople();
+  const { data } = useFragment({
+    fragment: PersonFragment,
+    from: {
+      __typename: "Person",
+      id,
+    },
+  });
+  return <button>{data?.name}</button>;
 }
 
 function Hidden() {
-  const people = usePeople();
   return null;
 }
 
-function ItemCard() {
-  const people = usePeople();
-
+function ItemCard({ id }) {
   return (
     <div>
-      <Title />
+      <Title id={id} />
       {Array.from({ length: 30 }).map(() => (
         <Hidden />
       ))}
-      <AddToCart />
+      <AddToCart id={id} />
     </div>
   );
 }
 
-function Row() {
-  const people = usePeople();
+function Row({ people }) {
+  // const people = usePeople();
   return (
     <div style={{ display: "flex" }}>
-      {people.map((person) => (
+      {people.map(({ id }) => (
         <>
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
+          <ItemCard id={id} />
+          <ItemCard id={id} />
+          <ItemCard id={id} />
+          <ItemCard id={id} />
+          <ItemCard id={id} />
         </>
       ))}
     </div>
   );
 }
 
-function Grid() {
-  const people = usePeople();
+function Grid({ people }) {
+  // const people = usePeople();
   if (!people) return <div>Loading...</div>;
-  return people.map((person) => (
+  return people.map(({ id }) => (
     <>
-      <Row />
-      <Row />
-      <Row />
+      <Row people={people} />
+      <Row people={people} />
+      <Row people={people} />
     </>
   ));
 }
 
-/**
- *
- * Comment out the first two lines and uncomment the rest to see how much faster
- * the app runs without using useQuery
- */
-function usePeople() {
-  const query = useQuery(ALL_PEOPLE);
-  return query.data?.people;
-
-  // const peopleData = [
-  //   { id: 1, name: "John Smith" },
-  //   { id: 2, name: "Sara Smith" },
-  //   { id: 3, name: "Budd Deey" },
-  // ];
-
-  // return peopleData;
-}
-
 function App() {
-  const query = useQuery(ALL_PEOPLE);
+  const { data, refetch } = useQuery(ALL_PEOPLE);
   const [show, setShow] = useState(false);
+
   const flip = () => {
-    query.refetch();
+    refetch();
     setShow(!show);
   };
 
   return (
     <div>
       <button onClick={flip}>Click Me</button>
-      {show && <Grid />}
+      {show && <Grid people={data?.people} />}
     </div>
   );
 }
